@@ -43,7 +43,7 @@ function _M.generate_auth_headers(self, content_type, destination)
         return nil, "not initialized"
     end
     
-    local date = os.date("%a, %d %b %Y %H:%M:%S +0000")
+    local date = os.date("!%a, %d %b %Y %H:%M:%S +0000")
     local hm, err = hmac:new(key)
     local StringToSign = "PUT"..string.char(10)..string.char(10)..content_type..string.char(10)..date..string.char(10)..destination
     headers, err = hm:generate_headers("AWS", id, "sha1", StringToSign)
