@@ -36,7 +36,7 @@ function _M.new(self, id, key)
 end
 
 
-function _M.generate_auth_headers(self, content_type, destination)
+function _M.generate_auth_headers(self, content_type, destination, method)
     local id, key = self.id, self.key
     
     if not id or not key then
@@ -45,7 +45,17 @@ function _M.generate_auth_headers(self, content_type, destination)
     
     local date = os.date("!%a, %d %b %Y %H:%M:%S +0000")
     local hm, err = hmac:new(key)
-    local StringToSign = "PUT"..string.char(10)..string.char(10)..content_type..string.char(10)..date..string.char(10)..destination
+    local StringToSign = '' 
+    local http_method = "PUT"
+    if http_method then
+        http_method = method
+    end
+    if http_method == 'PUT' or http_method == 'POST' then 
+        StringToSign = http_method .. '\n\n' .. content_type .. '\n'.. date ..'\n' .. destination
+    else
+        StringToSign = http_method .. '\n\n\n'.. date ..'\n' .. destination
+    end
+    
     headers, err = hm:generate_headers("AWS", id, "sha1", StringToSign)
     
     return headers, err
