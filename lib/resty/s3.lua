@@ -212,7 +212,32 @@ function _M.upload_content(self, file_content, bucket, object_name, check_for_ex
         return nil, "Could not upload: "..resp.status.." "..resp.body
     end
 end
-
-
+-- added support for generating presigned url
+function _M.generate_presigned_url(self, method, destination, expires_sec)
+    local id, key = self.id, self.key
+    
+    if not id or not key then
+        return nil, "not initialized"
+    end
+    local now = os.date("*t")
+    local expires =  os.time(now) + expires_sec
+    
+    local date = os.date("!%a, %d %b %Y %H:%M:%S +0000", expires)
+    local hm, err = hmac:new(key)
+    local http_method = "PUT"
+    if http_method then
+        http_method = method
+    end
+    
+    local StringToSign   = http_method .. '\n\n\n'.. expires ..'\n/' .. destination
+     -- strCan.append("GET\n\n\n#{expire_date}\n/#{S3_BUCKET}/#{path}");
+    local signature, err = hm:generate_signature('sha1', StringToSign)
+    if not signature then
+        return nil, err
+    end
+    local url = "https://s3.amazonaws.com/" .. destination .. '?AWSAccessKeyId=' .. id .. '&Expires=' .. expires .. '&Signature=' .. ngx.escape_uri(signature)
+    return url, nil
+   
+end
 
 return _M
